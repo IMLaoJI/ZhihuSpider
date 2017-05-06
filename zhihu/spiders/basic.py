@@ -57,10 +57,10 @@ class BasicSpider(scrapy.Spider):
 
         for url in self.start_urls:
             print '正在访问'+ url
-            time.sleep(10)
+            time.sleep(5)
             yield Request(
                 url= url.strip('\n'),
-                headers=self.set_headers('https://www.zhihu.com'),
+                headers=self.set_headers('https://www.zhihu.com/topic'),
                 cookies=cookielib.LWPCookieJar(filename='cookies'),
                 callback=self.parse,
                 meta={'page':1}
@@ -70,30 +70,38 @@ class BasicSpider(scrapy.Spider):
         # Get the next index URLs and yield Requests
 
         #attention
-        if response.meta['page'] < 5: 
+        if response.meta['page'] < 7: 
             next_page = response.meta['page'] + 1
             pre_fix = '?page=' + str(next_page) 
+            print '间隔5秒访问下一页'
+            time.sleep(5)
+            print '开始请求下一页'
+            urlparse.urljoin(response.url, pre_fix)
             yield Request(url=urlparse.urljoin(response.url, pre_fix),
-                headers=self.set_headers('https://www.zhihu.com'),
+                headers=self.set_headers(response.url),
                 cookies=cookielib.LWPCookieJar(filename='cookies'),
                 callback=self.parse,
                 meta = {'page':next_page}
                 )
-        print '开始选择问题爬取'
+        print '生成问题列表'
         # Get item URLs and yield Requests
         item_selector = response.xpath('//*[@class="question_link"]/@href')
         # item_selector = response.xpath('//*[@class="feed-item"]/link/@href')
         for url in item_selector.extract():
+            print '间隔3秒访问问题'
+            time.sleep(3)
+            print '开始访问问题'
+            print urlparse.urljoin(response.url, url)
             yield Request(urlparse.urljoin(response.url, url),
-                headers=self.set_headers('https://www.zhihu.com'),
+                headers=self.set_headers(urlparse.urljoin(response.url, url)),
                 cookies=cookielib.LWPCookieJar(filename='cookies'),
                 callback=self.parse_item)
-        print '开始休息'
-        time.sleep(15)
 
     def parse_item(self, response):
         item = ZhihuItem()
         item['topics'] = response.xpath('//*[@class="Tag-content"]/a/div/div/text()').extract()
         item['title'] = response.xpath('//*[@class="QuestionHeader-title"]/text()').extract()
         item['desc'] = response.xpath('//*[@class="RichText"]/text()').extract()
+        time.sleep(5)
         return item
+
