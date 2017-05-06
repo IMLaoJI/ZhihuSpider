@@ -70,11 +70,11 @@ class BasicSpider(scrapy.Spider):
         # Get the next index URLs and yield Requests
 
         #attention
-        if response.meta['page'] < 7: 
+        if response.meta['page'] < 10: 
             next_page = response.meta['page'] + 1
             pre_fix = '?page=' + str(next_page) 
-            print '间隔5秒访问下一页'
-            time.sleep(5)
+            print '间隔3秒访问下一页'
+            time.sleep(3)
             print '开始请求下一页'
             urlparse.urljoin(response.url, pre_fix)
             yield Request(url=urlparse.urljoin(response.url, pre_fix),
@@ -88,8 +88,8 @@ class BasicSpider(scrapy.Spider):
         item_selector = response.xpath('//*[@class="question_link"]/@href')
         # item_selector = response.xpath('//*[@class="feed-item"]/link/@href')
         for url in item_selector.extract():
-            print '间隔3秒访问问题'
-            time.sleep(3)
+            print '间隔2秒访问问题'
+            time.sleep(2)
             print '开始访问问题'
             print urlparse.urljoin(response.url, url)
             yield Request(urlparse.urljoin(response.url, url),
@@ -102,6 +102,6 @@ class BasicSpider(scrapy.Spider):
         item['topics'] = response.xpath('//*[@class="Tag-content"]/a/div/div/text()').extract()
         item['title'] = response.xpath('//*[@class="QuestionHeader-title"]/text()').extract()
         item['desc'] = response.xpath('//*[@class="RichText"]/text()').extract()
-        time.sleep(5)
+        time.sleep(2)
         return item
 
